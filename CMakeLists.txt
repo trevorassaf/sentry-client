@@ -6,7 +6,11 @@ include_directories(
 
 add_executable(dynamixel
   src/tests/dynamixel.cpp
-  src/dynamixel/AxA12RegisterMap.cpp)
+  src/dynamixel/AxA12.cpp
+  src/dynamixel/AxA12Packet.cpp
+  src/dynamixel/AxA12ReaderWriter.cpp
+  src/dynamixel/AxA12RegisterMap.cpp
+  src/dynamixel/AxA12Utils.cpp)
 
 target_link_libraries(dynamixel gflags::gflags)
 target_link_libraries(dynamixel glog::glog)
