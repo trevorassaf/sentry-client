@@ -1,7 +1,8 @@
-#ifndef SENTRY_CLIENT_DYNAMIXEL_AXA12PACKET_H_
-#define SENTRY_CLIENT_DYNAMIXEL_AXA12PACKET_H_
+#ifndef SENTRY_CLIENT_DYNAMIXEL_AXA12INSTRUCTIONPACKET_H_
+#define SENTRY_CLIENT_DYNAMIXEL_AXA12INSTRUCTIONPACKET_H_
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 #include "dynamixel/AxA12InstructionType.h"
@@ -9,17 +10,18 @@
 namespace dynamixel
 {
 
-class AxA12Packet
+class AxA12InstructionPacket
 {
 public:
-  AxA12Packet();
-  AxA12Packet(
+  AxA12InstructionPacket();
+  AxA12InstructionPacket(
       uint8_t id,
       AxA12InstructionType instruction_type,
       std::vector<uint8_t> parameters);
   uint8_t GetId() const;
   AxA12InstructionType GetInstructionType() const;
   const std::vector<uint8_t> &GetParameters() const;
+  std::string ToString() const;
 
 public:
   static constexpr uint8_t BROADCAST_ID = 0xFE;
@@ -33,4 +35,4 @@ private:
 
 } // namespace dynamixel
 
-#endif // SENTRY_CLIENT_DYNAMIXEL_AXA12PACKET_H_
+#endif // SENTRY_CLIENT_DYNAMIXEL_AXA12INSTRUCTIONPACKET_H_

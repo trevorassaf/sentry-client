@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "dynamixel/AxA12InstructionType.h"
-#include "dynamixel/AxA12Packet.h"
+#include "dynamixel/AxA12InstructionPacket.h"
 
 namespace
 {
@@ -36,7 +36,7 @@ uint8_t CalculatePacketLengthParameter(size_t parameter_count)
   return parameter_count + PARAMETER_COUNT_OFFSET;
 }
 
-uint8_t CalculatePacketCrc(const AxA12Packet &packet)
+uint8_t CalculatePacketCrc(const AxA12InstructionPacket &packet)
 {
   uint8_t scratch =
       packet.GetId() +

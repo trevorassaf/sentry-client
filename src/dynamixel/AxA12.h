@@ -11,8 +11,9 @@
 #include "Uart/UartClient.h"
 #include "Uart/RpiUartContext.h"
 
-#include "dynamixel/AxA12Packet.h"
+#include "dynamixel/AxA12InstructionPacket.h"
 #include "dynamixel/AxA12ReaderWriter.h"
+#include "dynamixel/AxA12StatusPacket.h"
 
 namespace dynamixel
 {
@@ -36,12 +37,12 @@ public:
   AxA12 &operator=(AxA12 &&other);
   ~AxA12();
 
-  bool Rotate1();
-  bool Rotate2();
+  bool Rotate(uint8_t id, uint16_t degree);
  
 private:
   void StealResources(AxA12 *other);
-  bool SendPacket(const AxA12Packet &packet);
+  bool SendPacket(const AxA12InstructionPacket &instruction);
+  bool ReadPacket(AxA12StatusPacket *out_status);
 
 private:
   bool is_initialized_;

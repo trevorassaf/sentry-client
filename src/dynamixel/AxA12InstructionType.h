@@ -17,6 +17,8 @@ enum class AxA12InstructionType : uint8_t
   SYNC_WRITE = 0x83,
 };
 
+const char *InstructionTypeToString(AxA12InstructionType type);
+
 } // namespace dynamixel
 
 #endif // SENTRY_CLIENT_DYNAMIXEL_AXA12INSTRUCTIONTYPE_H_

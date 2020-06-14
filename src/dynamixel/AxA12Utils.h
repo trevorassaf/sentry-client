@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "dynamixel/AxA12InstructionType.h"
-#include "dynamixel/AxA12Packet.h"
+#include "dynamixel/AxA12InstructionPacket.h"
 
 namespace dynamixel
 {
@@ -13,7 +13,7 @@ namespace dynamixel
 const std::vector<uint8_t> &GetHeaderBytes();
 size_t CalculateWriteBufferSize(size_t parameter_count);
 uint8_t CalculatePacketLengthParameter(size_t parameter_count);
-uint8_t CalculatePacketCrc(const AxA12Packet &packet);
+uint8_t CalculatePacketCrc(const AxA12InstructionPacket &packet);
 
 } // namespace dynamixel
 

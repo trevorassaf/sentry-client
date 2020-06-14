@@ -25,8 +25,10 @@ using System::RpiSystemContext;
 using Uart::RpiUartContext;
 using Uart::UartClient;
 
-const std::chrono::milliseconds SLEEP_TIME_AFTER_GPIO_ASSERT{100};
-const std::chrono::milliseconds SLEEP_TIME_AFTER_UART_OPERATION{100};
+const std::chrono::milliseconds SLEEP_TIME_AFTER_GPIO_TOGGLE{100};
+const std::chrono::microseconds SLEEP_TIME_AFTER_WRITE_OPERATION{20};
+const std::chrono::milliseconds SLEEP_TIME_BEFORE_READ_OPERATION{1};
+
 }  // namespace
 
 namespace dynamixel
@@ -88,63 +90,40 @@ AxA12 &AxA12::operator=(AxA12 &&other)
 
 AxA12::~AxA12() {}
 
-bool AxA12::SendPacket(const AxA12Packet &packet)
+bool AxA12::Rotate(uint8_t id, uint16_t rotation)
 {
-  gpio_->Set();
-  std::this_thread::sleep_for(SLEEP_TIME_AFTER_GPIO_ASSERT);
+  uint8_t most_significant_byte = rotation >> 8;
+  uint8_t least_significant_byte = rotation & 0xFF;
 
-  if (!axa12_reader_writer_.Write(packet))
-  {
-    LOG(ERROR) << "Failed to write UART message";
-    return false;
-  }
+  LOG(ERROR) << "AxA12::Rotate() -- most significant byte: "
+             << static_cast<int>(most_significant_byte);
+  LOG(ERROR) << "AxA12::Rotate() -- least significant byte: "
+             << static_cast<int>(least_significant_byte);
 
-  std::this_thread::sleep_for(SLEEP_TIME_AFTER_UART_OPERATION);
-  gpio_->Clear();
-
-  return true;
-}
-
-bool AxA12::Rotate1()
-{
+  // GOAL_POSITION_L takes least significant byte
+  // GOAL_POSITION_H takes most significant byte
   std::vector<uint8_t> parameters =
   {
     static_cast<uint8_t>(AxA12RegisterType::GOAL_POSITION_L),
-    0x32,
-    0x03,
+    least_significant_byte,
+    most_significant_byte,
   };
 
-  AxA12Packet packet{
-      AxA12Packet::BROADCAST_ID,
+  AxA12InstructionPacket packet{
+      id,
       AxA12InstructionType::WRITE_DATA,
       std::move(parameters)};
 
   if (!SendPacket(packet))
   {
-    LOG(ERROR) << "Failed to send rotate1 packet";
+    LOG(ERROR) << "Failed to broadcast rotate packet";
     return false;
   }
 
-  return true;
-}
-
-bool AxA12::Rotate2()
-{
-  std::vector<uint8_t> parameters =
+  AxA12StatusPacket status;
+  if (!ReadPacket(&status))
   {
-    static_cast<uint8_t>(AxA12RegisterType::GOAL_POSITION_L),
-    0xCD,
-    0x00,
-  };
-
-  AxA12Packet packet{
-      AxA12Packet::BROADCAST_ID,
-      AxA12InstructionType::WRITE_DATA,
-      std::move(parameters)};
-
-  if (!SendPacket(packet))
-  {
-    LOG(ERROR) << "Failed to send rotate1 packet";
+    LOG(ERROR) << "Failed to read status packet";
     return false;
   }
 
@@ -159,6 +138,40 @@ void AxA12::StealResources(AxA12 *other)
   axa12_reader_writer_ = std::move(other->axa12_reader_writer_);
   uart_context_ = std::move(other->uart_context_);
   gpio_ = std::move(other->gpio_);
+}
+
+bool AxA12::SendPacket(const AxA12InstructionPacket &packet)
+{
+  gpio_->Set();
+  //std::this_thread::sleep_for(SLEEP_TIME_AFTER_GPIO_TOGGLE);
+
+  LOG(ERROR) << "AxA12 Instruction Packet dump: " << packet.ToString();
+
+  if (!axa12_reader_writer_.Write(packet))
+  {
+    LOG(ERROR) << "Failed to write UART message";
+    return false;
+  }
+
+  std::this_thread::sleep_for(SLEEP_TIME_AFTER_WRITE_OPERATION);
+  return true;
+}
+
+bool AxA12::ReadPacket(AxA12StatusPacket *out_status)
+{
+  assert(out_status);
+  gpio_->Clear();
+
+  std::this_thread::sleep_for(SLEEP_TIME_BEFORE_READ_OPERATION);
+
+  if (!axa12_reader_writer_.Read(out_status))
+  {
+    LOG(ERROR) << "Failed to read UART message";
+    return false;
+  }
+
+  LOG(ERROR) << "AxA12 Status Packet Dump: " << out_status->ToString();
+  return true;
 }
 
 }  // namespace dynamixel
