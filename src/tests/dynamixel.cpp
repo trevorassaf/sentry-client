@@ -4,6 +4,7 @@
 #include <deque>
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <thread>
 #include <utility>
 
@@ -67,6 +68,43 @@ DEFINE_int32(rotation, kServoNeutralPosition, "Rotation in hex (0-1023)");
 
 DEFINE_validator(gpio, &ValidateGpio);
 DEFINE_validator(rotation, &ValidateRotation);
+
+bool PrintModelNumber(uint8_t id, AxA12 *axa12)
+{
+  assert(axa12);
+
+  uint16_t model_number;
+  if (!axa12->GetModelNumber(id, &model_number))
+  {
+    LOG(ERROR) << "Failed to get model number from axa12 " << static_cast<int>(id);
+    return false;
+  }
+
+  std::ostringstream stream;
+  stream << std::hex << static_cast<size_t>(model_number);
+  LOG(ERROR) << "Servo " << static_cast<int>(id) << " model number: 0x" << stream.str();
+
+  return true;
+}
+
+bool PrintVersionNumber(uint8_t id, AxA12 *axa12)
+{
+  assert(axa12);
+
+  uint8_t version_number;
+  if (!axa12->GetVersionNumber(id, &version_number))
+  {
+    LOG(ERROR) << "Failed to get version number from axa12 " << static_cast<int>(id);
+    return false;
+  }
+
+  std::ostringstream stream;
+  stream << std::hex << static_cast<size_t>(version_number);
+  LOG(ERROR) << "Servo " << static_cast<int>(id) << " version number: 0x" << stream.str();
+
+  return true;
+}
+
 }  // namespace
 
 int main(int argc, char **argv)
@@ -92,15 +130,39 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  if (!axa12.Rotate(1, static_cast<uint16_t>(FLAGS_rotation)))
+  if (!PrintModelNumber(1, &axa12))
+  {
+    LOG(ERROR) << "Failed to print model number for servo 1";
+    return EXIT_FAILURE;
+  }
+
+  if (!PrintModelNumber(2, &axa12))
+  {
+    LOG(ERROR) << "Failed to print model number for servo 1";
+    return EXIT_FAILURE;
+  }
+
+  if (!PrintVersionNumber(1, &axa12))
+  {
+    LOG(ERROR) << "Failed to print version number for servo 1";
+    return EXIT_FAILURE;
+  }
+
+  if (!PrintVersionNumber(2, &axa12))
+  {
+    LOG(ERROR) << "Failed to print version number for servo 1";
+    return EXIT_FAILURE;
+  }
+
+  if (!axa12.SetGoalPosition(1, static_cast<uint16_t>(FLAGS_rotation)))
   {
     LOG(ERROR) << "Failed to rotate servo 1";
     return EXIT_FAILURE;
   }
 
-  if (!axa12.Rotate(2, static_cast<uint16_t>(FLAGS_rotation)))
+  if (!axa12.SetGoalPosition(2, static_cast<uint16_t>(FLAGS_rotation)))
   {
-    LOG(ERROR) << "Failed to rotate servo 1";
+    LOG(ERROR) << "Failed to rotate servo 2";
     return EXIT_FAILURE;
   }
 

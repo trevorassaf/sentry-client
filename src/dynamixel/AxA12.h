@@ -37,7 +37,14 @@ public:
   AxA12 &operator=(AxA12 &&other);
   ~AxA12();
 
-  bool Rotate(uint8_t id, uint16_t degree);
+  bool GetModelNumber(uint8_t id, uint16_t *out_model_number);
+  bool GetVersionNumber(uint8_t id, uint8_t *out_version_number);
+
+  /*
+  bool GetId() const;
+  bool SetId(uint8_t *out_id);
+  */
+  bool SetGoalPosition(uint8_t id, uint16_t degree);
  
 private:
   void StealResources(AxA12 *other);

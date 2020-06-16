@@ -37,6 +37,12 @@ bool AxA12StatusPacketHeader::HasError(AxA12ErrorType type) const
   return error_bitset_.test(static_cast<size_t>(type));
 }
 
+bool AxA12StatusPacketHeader::HasError() const
+{
+  assert(is_valid_);
+  return error_bitset_.any();
+}
+
 AxA12StatusPacket::AxA12StatusPacket() : is_valid_{false} {}
 
 AxA12StatusPacket::AxA12StatusPacket(

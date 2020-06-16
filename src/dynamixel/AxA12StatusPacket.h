@@ -30,6 +30,7 @@ class AxA12StatusPacketHeader
     uint8_t GetId() const;
     uint8_t GetLength() const;
     bool HasError(AxA12ErrorType type) const;
+    bool HasError() const;
 
   private:
     bool is_valid_;

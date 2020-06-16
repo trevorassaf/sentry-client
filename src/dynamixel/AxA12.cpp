@@ -25,8 +25,7 @@ using System::RpiSystemContext;
 using Uart::RpiUartContext;
 using Uart::UartClient;
 
-const std::chrono::milliseconds SLEEP_TIME_AFTER_GPIO_TOGGLE{100};
-const std::chrono::microseconds SLEEP_TIME_AFTER_WRITE_OPERATION{20};
+const std::chrono::microseconds SLEEP_TIME_AFTER_WRITE_OPERATION{50};
 const std::chrono::milliseconds SLEEP_TIME_BEFORE_READ_OPERATION{1};
 
 }  // namespace
@@ -90,7 +89,101 @@ AxA12 &AxA12::operator=(AxA12 &&other)
 
 AxA12::~AxA12() {}
 
-bool AxA12::Rotate(uint8_t id, uint16_t rotation)
+bool AxA12::GetModelNumber(uint8_t id, uint16_t *out_model_number)
+{
+  assert(out_model_number);
+
+  // Read two bytes from model number register
+  std::vector<uint8_t> parameters =
+  {
+    static_cast<int>(AxA12RegisterType::MODEL_NUMBER_L),
+    2,
+  };
+
+  AxA12InstructionPacket packet{
+      id,
+      AxA12InstructionType::READ_DATA,
+      std::move(parameters)};
+
+  if (!SendPacket(packet))
+  {
+    LOG(ERROR) << "Failed to send model number read instruction";
+    return false;
+  }
+
+  AxA12StatusPacket status;
+  if (!ReadPacket(&status))
+  {
+    LOG(ERROR) << "Failed to read model number status packet";
+    return false;
+  }
+
+  if (status.GetHeader().HasError())
+  {
+    LOG(ERROR) << "Status packet has error when reading model number";
+    return false;
+  }
+
+  if (status.GetParameters().size() != 2)
+  {
+    LOG(ERROR) << "Unexpected number of parameters. Expected 2, received: "
+               << status.GetParameters().size();
+    return false;
+  }
+
+  uint8_t least_significant_byte = status.GetParameters().at(0);
+  uint8_t most_significant_byte = status.GetParameters().at(1);
+  *out_model_number = (most_significant_byte << 8) | least_significant_byte;
+  return true;
+}
+
+bool AxA12::GetVersionNumber(uint8_t id, uint8_t *out_version_number)
+{
+  assert(out_version_number);
+
+  // Read single byte from version number register
+  std::vector<uint8_t> parameters =
+  {
+    static_cast<int>(AxA12RegisterType::FW_VERSION),
+    1,
+  };
+
+  AxA12InstructionPacket packet{
+      id,
+      AxA12InstructionType::READ_DATA,
+      std::move(parameters)};
+
+  if (!SendPacket(packet))
+  {
+    LOG(ERROR) << "Failed to send version number read instruction";
+    return false;
+  }
+
+  AxA12StatusPacket status;
+  if (!ReadPacket(&status))
+  {
+    LOG(ERROR) << "Failed to read version number status packet";
+    return false;
+  }
+
+  if (status.GetHeader().HasError())
+  {
+    LOG(ERROR) << "Status packet has error when reading version number";
+    return false;
+  }
+
+  if (status.GetParameters().size() != 1)
+  {
+    LOG(ERROR) << "Unexpected number of parameters. Expected 1, received: "
+               << status.GetParameters().size();
+    return false;
+  }
+
+  *out_version_number = status.GetParameters().at(0);
+  return true;
+}
+
+bool AxA12::SetGoalPosition(uint8_t id, uint16_t rotation)
 {
   uint8_t most_significant_byte = rotation >> 8;
   uint8_t least_significant_byte = rotation & 0xFF;
@@ -143,7 +236,7 @@ void AxA12::StealResources(AxA12 *other)
 bool AxA12::SendPacket(const AxA12InstructionPacket &packet)
 {
   gpio_->Set();
-  //std::this_thread::sleep_for(SLEEP_TIME_AFTER_GPIO_TOGGLE);
+  std::this_thread::sleep_for(SLEEP_TIME_AFTER_WRITE_OPERATION);
 
   LOG(ERROR) << "AxA12 Instruction Packet dump: " << packet.ToString();
 
@@ -171,6 +264,7 @@ bool AxA12::ReadPacket(AxA12StatusPacket *out_status)
   }
 
   LOG(ERROR) << "AxA12 Status Packet Dump: " << out_status->ToString();
+  std::this_thread::sleep_for(SLEEP_TIME_AFTER_WRITE_OPERATION);
   return true;
 }
 
