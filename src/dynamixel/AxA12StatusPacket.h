@@ -3,6 +3,7 @@
 
 #include <bitset>
 #include <cstdint>
+#include <unordered_set>
 #include <vector>
 
 namespace dynamixel
@@ -18,6 +19,9 @@ enum class AxA12ErrorType : uint8_t
   OVERLOAD      = 5,
   INSTRUCTION   = 6,
 };
+
+uint8_t ToBitset(const std::unordered_set<AxA12ErrorType> &errors);
+std::unordered_set<AxA12ErrorType> FromBitset(uint8_t bits);
 
 class AxA12StatusPacketHeader
 {

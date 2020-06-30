@@ -8,6 +8,30 @@
 namespace dynamixel
 {
 
+uint8_t ToBitset(const std::unordered_set<AxA12ErrorType> &errors)
+{
+  uint8_t bits = 0;
+  for (AxA12ErrorType error : errors)
+  {
+    bits |= 1 << static_cast<size_t>(error);
+  }
+  return bits;
+}
+
+std::unordered_set<AxA12ErrorType> FromBitset(uint8_t bits)
+{
+  std::unordered_set<AxA12ErrorType> errors;
+  for (size_t i = 0; i < 8; ++i)
+  {
+    if (bits % 2 == 1)
+    {
+      errors.insert(static_cast<AxA12ErrorType>(i));
+    }
+    bits >>= 1;
+  }
+  return errors;
+}
+
 AxA12StatusPacketHeader::AxA12StatusPacketHeader() : is_valid_{false} {}
 
 AxA12StatusPacketHeader::AxA12StatusPacketHeader(

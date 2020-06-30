@@ -74,7 +74,7 @@ bool PrintModelNumber(uint8_t id, AxA12 *axa12)
   assert(axa12);
 
   uint16_t model_number;
-  if (!axa12->GetModelNumber(id, &model_number))
+  if (!axa12->GetModelNumber(&model_number))
   {
     LOG(ERROR) << "Failed to get model number from axa12 " << static_cast<int>(id);
     return false;
@@ -92,7 +92,7 @@ bool PrintVersionNumber(uint8_t id, AxA12 *axa12)
   assert(axa12);
 
   uint8_t version_number;
-  if (!axa12->GetVersionNumber(id, &version_number))
+  if (!axa12->GetVersionNumber(&version_number))
   {
     LOG(ERROR) << "Failed to get version number from axa12 " << static_cast<int>(id);
     return false;
@@ -120,23 +120,19 @@ int main(int argc, char **argv)
   LOG(ERROR) << "Rotation: " << FLAGS_rotation;
 
   AxA12 axa12;
+  uint8_t id = 1;
   if (!AxA12::Create(
           &system_context,
           &gpio_manager,
           FLAGS_gpio,
+          id,
           &axa12))
   {
     LOG(ERROR) << "Failed to initialize AxA12 servo";
-    return EXIT_FAILURE;
+    return false;
   }
 
   if (!PrintModelNumber(1, &axa12))
-  {
-    LOG(ERROR) << "Failed to print model number for servo 1";
-    return EXIT_FAILURE;
-  }
-
-  if (!PrintModelNumber(2, &axa12))
   {
     LOG(ERROR) << "Failed to print model number for servo 1";
     return EXIT_FAILURE;
@@ -148,21 +144,18 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  if (!PrintVersionNumber(2, &axa12))
+  uint8_t read_id;
+  if (!axa12.GetId(&read_id))
   {
-    LOG(ERROR) << "Failed to print version number for servo 1";
+    LOG(ERROR) << "Failed to read id for id=1";
     return EXIT_FAILURE;
   }
 
-  if (!axa12.SetGoalPosition(1, static_cast<uint16_t>(FLAGS_rotation)))
+  LOG(ERROR) << "Id for servo with id=1: " << static_cast<int>(read_id);
+
+  if (!axa12.SetGoalPosition(static_cast<uint16_t>(FLAGS_rotation)))
   {
     LOG(ERROR) << "Failed to rotate servo 1";
-    return EXIT_FAILURE;
-  }
-
-  if (!axa12.SetGoalPosition(2, static_cast<uint16_t>(FLAGS_rotation)))
-  {
-    LOG(ERROR) << "Failed to rotate servo 2";
     return EXIT_FAILURE;
   }
 
