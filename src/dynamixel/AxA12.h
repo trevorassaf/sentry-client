@@ -24,19 +24,10 @@ namespace dynamixel
 class AxA12
 {
 public:
-  static bool Create(
-      System::RpiSystemContext *system,
-      Gpio::RpiPinManager *gpio_manager,
-      size_t gpio_index,
-      uint8_t id,
-      AxA12 *out_axa12);
-
-public:
   AxA12();
   AxA12(
       Uart::UartClient *uart_client,
-      std::unique_ptr<Uart::RpiUartContext> uart_context,
-      std::unique_ptr<Gpio::OutputPin> gpio,
+      Gpio::OutputPin *gpio,
       uint8_t id);
   AxA12(AxA12 &&other);
   AxA12 &operator=(AxA12 &&other);
@@ -108,8 +99,7 @@ private:
 private:
   bool is_initialized_;
   AxA12ReaderWriter axa12_reader_writer_;
-  std::unique_ptr<Uart::RpiUartContext> uart_context_;
-  std::unique_ptr<Gpio::OutputPin> gpio_;
+  Gpio::OutputPin* gpio_;
   uint8_t id_;
 };
 

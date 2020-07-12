@@ -8,6 +8,7 @@ add_executable(dynamixel
   src/tests/dynamixel.cpp
   src/dynamixel/AxA12.cpp
   src/dynamixel/AxA12BaudRate.cpp
+  src/dynamixel/AxA12Factory.cpp
   src/dynamixel/AxA12InstructionPacket.cpp
   src/dynamixel/AxA12InstructionType.cpp
   src/dynamixel/AxA12ReaderWriter.cpp

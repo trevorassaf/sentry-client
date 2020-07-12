@@ -35,48 +35,15 @@ constexpr uint16_t MAX_TORQUE = 0x3FF;
 namespace dynamixel
 {
 
-bool AxA12::Create(
-    RpiSystemContext *system,
-    RpiPinManager *gpio_manager,
-    size_t gpio_index,
-    uint8_t id,
-    AxA12 *out_axa12)
-{
-  assert(system);
-  assert(gpio_manager);
-  assert(out_axa12);
-
-  auto uart_context = std::make_unique<RpiUartContext>(system);
-  UartClient *uart_client = nullptr;
-  if (!uart_context->GetSerial0(&uart_client))
-  {
-    LOG(ERROR) << "Failed to initialize uart context";
-    return false;
-  }
-
-  std::unique_ptr<OutputPin> gpio_pin =
-      gpio_manager->BindOutputPin(gpio_index);
-
-  *out_axa12 = AxA12{
-    uart_client,
-    std::move(uart_context),
-    std::move(gpio_pin),
-    id};
-
-  return true;
-}
-
 AxA12::AxA12() : is_initialized_{false} {}
 
 AxA12::AxA12(
   UartClient *uart,
-  std::unique_ptr<RpiUartContext> uart_context,
-  std::unique_ptr<OutputPin> gpio,
+  OutputPin *gpio,
   uint8_t id)
 : is_initialized_{true},
   axa12_reader_writer_{uart},
-  uart_context_{std::move(uart_context)},
-  gpio_{std::move(gpio)},
+  gpio_{gpio},
   id_{id} {}
 
 AxA12::AxA12(AxA12 &&other)
@@ -593,7 +560,6 @@ void AxA12::StealResources(AxA12 *other)
   is_initialized_ = other->is_initialized_;
   other->is_initialized_ = false;
   axa12_reader_writer_ = std::move(other->axa12_reader_writer_);
-  uart_context_ = std::move(other->uart_context_);
   gpio_ = std::move(other->gpio_);
   id_ = other->id_;
 }
