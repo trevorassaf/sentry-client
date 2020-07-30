@@ -4,8 +4,7 @@ include_directories(
   src/
   ../../gpio14/repo/include/)
 
-add_executable(dynamixel
-  src/tests/dynamixel.cpp
+add_library(dynamixel STATIC
   src/dynamixel/AxA12.cpp
   src/dynamixel/AxA12BaudRate.cpp
   src/dynamixel/AxA12Factory.cpp
@@ -19,3 +18,10 @@ add_executable(dynamixel
 target_link_libraries(dynamixel gflags::gflags)
 target_link_libraries(dynamixel glog::glog)
 target_link_libraries(dynamixel gpio14)
+
+add_executable(test_dynamixel src/tests/dynamixel.cpp)
+
+target_link_libraries(test_dynamixel gflags::gflags)
+target_link_libraries(test_dynamixel glog::glog)
+target_link_libraries(test_dynamixel gpio14)
+target_link_libraries(test_dynamixel dynamixel)

@@ -72,6 +72,10 @@ public:
   bool SetTorqueLimit(uint16_t limit);
  
   bool IsMoving(bool *out_moving);
+
+  bool GetPresentPosition(uint16_t *out_position);
+
+  bool SetTorqueEnabled(bool enabled);
  
 private:
   void StealResources(AxA12 *other);

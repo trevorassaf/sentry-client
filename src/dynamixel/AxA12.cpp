@@ -25,8 +25,13 @@ using System::RpiSystemContext;
 using Uart::RpiUartContext;
 using Uart::UartClient;
 
+/*
 const std::chrono::microseconds SLEEP_TIME_AFTER_WRITE_OPERATION{100};
 const std::chrono::milliseconds SLEEP_TIME_BEFORE_READ_OPERATION{1};
+*/
+
+const std::chrono::microseconds SLEEP_TIME_AFTER_WRITE_OPERATION{100};
+const std::chrono::milliseconds SLEEP_TIME_BEFORE_READ_OPERATION{20};
 
 constexpr uint16_t MAX_TORQUE = 0x3FF;
 
@@ -554,6 +559,32 @@ bool AxA12::IsMoving(bool *out_moving)
   return true;
 }
 
+bool AxA12::GetPresentPosition(uint16_t *out_position)
+{
+  assert(out_position);
+  if (!BasicReadWrapper(
+          AxA12RegisterType::PRESENT_POSITION_L,
+          out_position))
+  {
+    LOG(ERROR) << "Failed to read present position";
+    return false;
+  }
+
+  return true;
+}
+
+bool AxA12::SetTorqueEnabled(bool enabled)
+{
+  if (!BasicWriteWrapper(
+          AxA12RegisterType::TORQUE_ENABLE,
+          static_cast<uint8_t>(enabled)))
+  {
+    LOG(ERROR) << "Failed to set torque enabled: " << static_cast<uint8_t>(enabled);
+    return false;
+  }
+  return true;
+}
+
 void AxA12::StealResources(AxA12 *other)
 {
   assert(other);
@@ -568,8 +599,6 @@ bool AxA12::SendPacket(const AxA12InstructionPacket &packet)
 {
   gpio_->Set();
   std::this_thread::sleep_for(SLEEP_TIME_AFTER_WRITE_OPERATION);
-
-  LOG(ERROR) << "AxA12 Instruction Packet dump: " << packet.ToString();
 
   if (!axa12_reader_writer_.Write(packet))
   {
@@ -596,7 +625,6 @@ bool AxA12::ReadPacket(AxA12StatusPacket *out_status)
     return false;
   }
 
-  LOG(ERROR) << "AxA12 Status Packet Dump: " << out_status->ToString();
   std::this_thread::sleep_for(SLEEP_TIME_AFTER_WRITE_OPERATION);
   return true;
 }
@@ -690,7 +718,7 @@ bool AxA12::BasicReadWrapper(
 
   if (status.GetParameters().size() != status_parameter_count)
   {
-    LOG(ERROR) << "Expected parameter count: " << status_parameter_count
+    LOG(ERROR) << "Expected parameter count: " << (int)status_parameter_count
                << ". Empirical parameter count: " << status.GetParameters().size();
     return false;
   }
